@@ -1,6 +1,6 @@
-# Preact App with Responsive Images - Complete Setup Guide
+# Complete Project Setup Guide for Preact App with Responsive Images
 
-This guide provides a comprehensive setup for a Preact application with responsive image handling using Webpack and Sharp.
+This document contains the full setup for a Preact application with responsive image handling, including all necessary files and their contents.
 
 ## Project Structure
 
@@ -25,13 +25,13 @@ project-root/
 │   └── webpack.prod.js
 ├── package.json
 ├── vercel.json
-└── .gitignore
+├── .gitignore
+└── .env.example
 ```
 
 ## File Contents
 
-### 1. package.json
-
+### package.json
 ```json
 {
   "name": "preact-responsive-image-app",
@@ -41,6 +41,10 @@ project-root/
   "scripts": {
     "start": "webpack serve --config config/webpack.dev.js",
     "build": "webpack --config config/webpack.prod.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.js",
+    "format": "prettier --write 'src/**/*.{js,css}'",
+    "optimize-images": "node scripts/optimize-images.js",
     "deploy": "vercel"
   },
   "dependencies": {
@@ -51,14 +55,19 @@ project-root/
     "@babel/core": "^7.22.10",
     "@babel/preset-env": "^7.22.10",
     "@babel/plugin-transform-react-jsx": "^7.22.5",
+    "@testing-library/preact": "^3.2.3",
     "babel-loader": "^9.1.3",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.8.1",
     "css-minimizer-webpack-plugin": "^5.0.1",
     "dotenv-webpack": "^8.0.1",
+    "eslint": "^8.47.0",
+    "eslint-plugin-preact": "^0.1.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.3",
+    "jest": "^29.6.2",
     "mini-css-extract-plugin": "^2.7.6",
+    "prettier": "^3.0.1",
     "responsive-loader": "^3.1.2",
     "sharp": "^0.32.4",
     "style-loader": "^3.3.3",
@@ -71,8 +80,7 @@ project-root/
 }
 ```
 
-### 2. config/webpack.common.js
-
+### config/webpack.common.js
 ```javascript
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -187,8 +195,7 @@ module.exports = {
 };
 ```
 
-### 3. config/webpack.dev.js
-
+### config/webpack.dev.js
 ```javascript
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
@@ -212,8 +219,7 @@ module.exports = merge(common, {
 });
 ```
 
-### 4. config/webpack.prod.js
-
+### config/webpack.prod.js
 ```javascript
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
@@ -267,8 +273,7 @@ module.exports = merge(common, {
 });
 ```
 
-### 5. src/components/ResponsiveImage/ResponsiveImage.js
-
+### src/components/ResponsiveImage/ResponsiveImage.js
 ```javascript
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
@@ -320,8 +325,7 @@ const ResponsiveImage = ({ src, alt, sizes }) => {
 export default ResponsiveImage;
 ```
 
-### 6. src/components/App/App.js
-
+### src/components/App/App.js
 ```javascript
 import { h, Component } from 'preact';
 import ResponsiveImage from '../ResponsiveImage/ResponsiveImage';
@@ -365,8 +369,7 @@ const App = () => (
 export default App;
 ```
 
-### 7. src/index.js
-
+### src/index.js
 ```javascript
 import { h, render } from 'preact';
 import App from './components/App/App';
@@ -375,24 +378,28 @@ import './styles/global.css';
 render(<App />, document.body);
 ```
 
-### 8. src/index.html
-
+### src/index.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Preact Responsive Image App</title>
+    <meta name="description" content="A Preact application demonstrating responsive image handling">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <!-- You can add any additional meta tags, stylesheets, or scripts here -->
 </head>
 <body>
     <div id="app"></div>
+    <!-- The Preact app will be rendered inside this div -->
+    <!-- Webpack will automatically inject the bundled JavaScript here -->
 </body>
 </html>
 ```
 
-### 9. src/styles/global.css
-
+### src/styles/global.css
 ```css
 body {
   font-family: Arial, sans-serif;
@@ -408,109 +415,60 @@ body {
 }
 ```
 
-### 10. vercel.json
+### .env.example
+```
+# Application
+APP_NAME=PreactResponsiveImageApp
+NODE_ENV=development
 
-```json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    {
-      "src": "/assets/images/(.*)",
-      "dest": "/assets/images/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
-}
+# Server
+PORT=3000
+
+# Image Processing
+MAX_IMAGE_SIZE=5000000 # 5MB in bytes
+ALLOWED_IMAGE_TYPES=png,jpg,jpeg
+
+# API Keys (replace with your actual keys in .env.development and .env.production)
+VERCEL_API_TOKEN=your_vercel_api_token_here
+
+# Database (if applicable)
+DB_HOST=localhost
+DB_USER=your_database_user
+DB_PASS=your_database_password
+DB_NAME=your_database_name
+
+# Caching
+REDIS_URL=redis://localhost:6379
+
+# Logging
+LOG_LEVEL=info
+
+# Feature Flags
+ENABLE_WEBP_CONVERSION=true
+ENABLE_LAZY_LOADING=true
+
+# Analytics (if applicable)
+GOOGLE_ANALYTICS_ID=your_ga_id_here
+
+# Content Delivery Network (if applicable)
+CDN_URL=https://your-cdn-url.com
+
+# Security
+JWT_SECRET=your_jwt_secret_here
+CORS_ORIGIN=http://localhost:3000
 ```
 
-### 11. .gitignore
-
+### .gitignore
 ```
 node_modules/
 dist/
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development
+.env.test
+.env.production
 .vercel
 ```
 
-## Setup Instructions
-
-1. Create a new directory for your project and navigate into it:
-   ```
-   mkdir preact-responsive-image-app && cd preact-responsive-image-app
-   ```
-
-2. Create the file structure as shown above.
-
-3. Copy the contents of each file into the respective files in your project.
-
-4. Initialize a new Git repository:
-   ```
-   git init
-   ```
-
-5. Install the dependencies:
-   ```
-   npm install
-   ```
-
-6. Place your source PNG images in the `public/images/` directory. For testing, you can use any PNG image and name it `example.png`.
-
-7. Start the development server:
-   ```
-   npm start
-   ```
-
-8. To build the project for production:
-   ```
-   npm run build
-   ```
-
-## Deployment
-
-### Vercel
-
-1. Install the Vercel CLI:
-   ```
-   npm i -g vercel
-   ```
-
-2. Deploy to Vercel:
-   ```
-   vercel
-   ```
-
-3. Follow the prompts to link your project to your Vercel account.
-
-## Usage
-
-After setting up the project, you can use the `ResponsiveImage` component in your Preact application like this:
-
-```jsx
-import { ResponsiveImage } from './components/ResponsiveImage/ResponsiveImage';
-
-const MyComponent = () => (
-  <ResponsiveImage
-    src="example.png"
-    alt="An example image"
-    sizes="(max-width: 600px) 300px, (max-width: 1200px) 600px, 1200px"
-  />
-);
+### vercel.json
 ```
-
-This will display your image with proper responsive behavior and format fallbacks.
-</antArtifact
