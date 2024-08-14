@@ -453,17 +453,79 @@ dist/
 }
 ```
 
+### .env.example
+```
+# Application
+APP_NAME=PreactResponsiveImageApp
+NODE_ENV=development
+
+# Server
+PORT=3000
+
+# Image Processing
+MAX_IMAGE_SIZE=5000000 # 5MB in bytes
+ALLOWED_IMAGE_TYPES=png,jpg,jpeg
+
+# API Keys (replace with your actual keys in .env.development and .env.production)
+VERCEL_API_TOKEN=your_vercel_api_token_here
+
+# Database (if applicable)
+DB_HOST=localhost
+DB_USER=your_database_user
+DB_PASS=your_database_password
+DB_NAME=your_database_name
+
+# Caching
+REDIS_URL=redis://localhost:6379
+
+# Logging
+LOG_LEVEL=info
+
+# Feature Flags
+ENABLE_WEBP_CONVERSION=true
+ENABLE_LAZY_LOADING=true
+
+# Analytics (if applicable)
+GOOGLE_ANALYTICS_ID=your_ga_id_here
+
+# Content Delivery Network (if applicable)
+CDN_URL=https://your-cdn-url.com
+
+# Security
+JWT_SECRET=your_jwt_secret_here
+CORS_ORIGIN=http://localhost:3000
+```
+
 ## Setup Instructions
 
 1. Clone the repository or create a new directory for your project.
 2. Copy all the files and directories as per the project structure.
 3. Run `npm install` to install all dependencies.
-4. Create a `.env.development` and `.env.production` file based on the `.env.example` file.
+4. Create a `.env.development` and `.env.production` file based on the `.env.example` file:
+   - Copy `.env.example` to `.env.development` and `.env.production`
+   - Edit both files and replace the placeholder values with your actual configuration
 5. Place your source PNG images in the `public/images/` directory.
 6. Run `npm start` to start the development server.
 7. Run `npm run build` to create a production build.
 
 ## Additional Information
+
+### Environment Variables
+The project uses `dotenv-webpack` to handle environment variables. The `.env.example` file provides a template for the required environment variables. Here's an explanation of the included variables:
+
+- `APP_NAME` and `NODE_ENV`: Basic application settings.
+- `PORT`: The port on which your server will run.
+- `MAX_IMAGE_SIZE` and `ALLOWED_IMAGE_TYPES`: Settings for image processing.
+- `VERCEL_API_TOKEN`: For Vercel deployments.
+- Database settings: In case your app uses a database.
+- `REDIS_URL`: For caching, if implemented.
+- `LOG_LEVEL`: To control the verbosity of logging.
+- Feature flags: To easily enable/disable certain features.
+- `GOOGLE_ANALYTICS_ID`: For analytics integration.
+- `CDN_URL`: If you're using a Content Delivery Network.
+- Security settings: JWT secret and CORS origin.
+
+Make sure to set these variables in your `.env.development` and `.env.production` files as needed. Never commit these files to version control.
 
 ### Responsive Image Handling
 The project uses the `responsive-loader` with a custom adapter using Sharp to generate multiple sizes and formats of each image. The `ResponsiveImage` component then uses these generated images to provide a responsive image with WebP support and appropriate fallbacks.
@@ -473,9 +535,6 @@ The Webpack configuration is split into three files:
 - `webpack.common.js`: Contains common configuration for both development and production.
 - `webpack.dev.js`: Development-specific configuration.
 - `webpack.prod.js`: Production-specific configuration with optimizations.
-
-### Environment Variables
-The project uses `dotenv-webpack` to handle environment variables. Make sure to set up your `.env.development` and `.env.production` files with the necessary variables.
 
 ### Deployment
 The project includes a `vercel.json` file for easy deployment to Vercel. You can deploy by running `npm run deploy` after setting up the Vercel CLI.
