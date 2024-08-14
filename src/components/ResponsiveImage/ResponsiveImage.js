@@ -9,14 +9,14 @@ const ResponsiveImage = ({ src, alt, sizes }) => {
     fetch(`/assets/images/metadata/${src.replace(/\.[^/.]+$/, "")}.json`)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to load image metadata');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
       .then(setImageMeta)
       .catch(err => {
         console.error('Error loading image metadata:', err);
-        setError('Failed to load image. Please try again later.');
+        setError(`Failed to load image metadata: ${err.message}`);
       });
   }, [src]);
 
@@ -40,7 +40,10 @@ const ResponsiveImage = ({ src, alt, sizes }) => {
       sizes={sizes}
       alt={alt}
       loading="lazy"
-      onError={() => setError('Failed to load image. Please try again later.')}
+      onError={(e) => {
+        console.error('Image loading error:', e);
+        setError(`Failed to load image: ${e.target.src}`);
+      }}
     />
   );
 };
