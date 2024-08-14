@@ -2,7 +2,7 @@
 
 This project demonstrates a production-ready Preact application with advanced responsive image handling. It includes optimizations, best practices, and features suitable for a production environment.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/jameswquinn/webpack-preact-jest-app)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/preact-responsive-image-project)
 
 ## Table of Contents
 
@@ -13,7 +13,6 @@ This project demonstrates a production-ready Preact application with advanced re
 - [Usage](#usage)
 - [How It Works](#how-it-works)
 - [Project Lifecycle](#project-lifecycle)
-- [Detailed Process Description](#detailed-process-description)
 - [Configuration Files](#configuration-files)
 - [Scripts](#scripts)
 - [Deployment](#deployment)
@@ -163,10 +162,6 @@ graph TD
 
 This diagram shows the main stages of the development and deployment process, including configuration, testing, CI/CD, image processing, and ongoing activities like error handling and monitoring.
 
-## Detailed Process Description
-
-For a comprehensive breakdown of each step in the project lifecycle, please refer to the [PROCESS.md](PROCESS.md) file in the repository. This document provides in-depth information about each stage, from development to monitoring and feedback.
-
 ## Configuration Files
 
 ### .eslintrc.js
@@ -263,15 +258,108 @@ Make sure to set these variables in your `.env.development` and `.env.production
 
 ## Troubleshooting
 
-If you encounter any issues, try the following:
+If you encounter the error "Failed to load image. Please try again later.", follow these steps:
 
-1. Ensure all dependencies are installed: `npm install`
-2. Clear the cache: `npm cache clean --force`
-3. Delete the `node_modules` folder and reinstall: `rm -rf node_modules && npm install`
-4. Ensure your Node.js version is compatible (14 or later)
-5. Check the console for any error messages and refer to the error message for specific troubleshooting steps
+1. Check Image Existence:
+   - Ensure that your source PNG images are in the `public/images/` directory.
+   - Verify that the image filename in your code matches exactly with the file in the directory.
 
-If issues persist, please open an issue on the GitHub repository.
+2. Build Process:
+   - Run `npm run build` and check the console for any error messages during the image processing step.
+   - After building, check the `dist/assets/images/` directory to ensure that the processed images and metadata files are generated correctly.
+
+3. Development Server:
+   - If using a development server, ensure it's configured to serve the `dist` directory correctly.
+   - Check the Network tab in your browser's Developer Tools to see if the image and metadata files are being requested with the correct paths.
+
+4. Metadata Fetch:
+   - Open your browser's Developer Tools and go to the Network tab.
+   - Look for requests to `.json` files in the `/assets/images/metadata/` directory.
+   - If these requests are failing, check your server configuration to ensure these files are being served correctly.
+
+5. Image Paths:
+   - Verify that the image paths in your code match the actual file names and directory structure.
+   - Example usage:
+     ```jsx
+     <ResponsiveImage
+       src="example.png"
+       alt="Example image"
+       sizes="(max-width: 600px) 300px, (max-width: 1200px) 600px, 1200px"
+     />
+     ```
+
+6. CORS Issues:
+   - If you're hosting your images on a different domain, ensure that CORS is properly configured on your server.
+
+7. Environment Variables:
+   - Check that your environment variables are set correctly, especially any that might affect image processing or serving.
+
+8. Update ResponsiveImage Component:
+   - Modify the ResponsiveImage component to provide more detailed error information. Update `src/components/ResponsiveImage/ResponsiveImage.js`:
+
+     ```javascript
+     import { h } from 'preact';
+     import { useState, useEffect } from 'preact/hooks';
+
+     const ResponsiveImage = ({ src, alt, sizes }) => {
+       const [imageMeta, setImageMeta] = useState(null);
+       const [error, setError] = useState(null);
+
+       useEffect(() => {
+         fetch(`/assets/images/metadata/${src.replace(/\.[^/.]+$/, "")}.json`)
+           .then(response => {
+             if (!response.ok) {
+               throw new Error(`HTTP error! status: ${response.status}`);
+             }
+             return response.json();
+           })
+           .then(setImageMeta)
+           .catch(err => {
+             console.error('Error loading image metadata:', err);
+             setError(`Failed to load image metadata: ${err.message}`);
+           });
+       }, [src]);
+
+       if (error) return <div class="error">{error}</div>;
+       if (!imageMeta) return <div class="loading">Loading...</div>;
+
+       const basePath = '/assets/images';
+       const webpSrcSet = [300, 600, 1200, 2000]
+         .map(size => `${basePath}/webp/${src.replace(/\.[^/.]+$/, "")}-${size}.webp ${size}w`)
+         .join(', ');
+       
+       const fallbackFormat = imageMeta.hasAlpha ? 'png' : 'jpg';
+       const fallbackSrcSet = [300, 600, 1200, 2000]
+         .map(size => `${basePath}/${fallbackFormat}/${src.replace(/\.[^/.]+$/, "")}-${size}.${fallbackFormat} ${size}w`)
+         .join(', ');
+
+       return (
+         <img
+           src={`${basePath}/${fallbackFormat}/${src.replace(/\.[^/.]+$/, "")}-600.${fallbackFormat}`}
+           srcSet={`${webpSrcSet}, ${fallbackSrcSet}`}
+           sizes={sizes}
+           alt={alt}
+           loading="lazy"
+           onError={(e) => {
+             console.error('Image loading error:', e);
+             setError(`Failed to load image: ${e.target.src}`);
+           }}
+         />
+       );
+     };
+
+     export default ResponsiveImage;
+     ```
+
+9. Verify Webpack Configuration:
+   - Double-check your Webpack configuration, especially the part handling image processing.
+   - Ensure that the output paths in the Webpack config match the paths you're using in the ResponsiveImage component.
+
+If the issue persists after trying these steps, please open an issue on the GitHub repository with the following information:
+- The exact error message you're seeing
+- Your Webpack configuration
+- The contents of your `public/images/` directory
+- Any relevant console or network errors from your browser's Developer Tools
 
 ## Performance Considerations
 
