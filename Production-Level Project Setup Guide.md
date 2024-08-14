@@ -220,4 +220,267 @@ module.exports = merge(common, {
 });
 ```
 
-[Continued in Part 2]
+### config/webpack.prod.js
+```javascript
+const { merge } = require('webpack-merge');
+const common = require('./webpack.common.js');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
+
+module.exports = merge(common, {
+  mode: 'production',
+  devtool: 'source-map',
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css',
+    }),
+    new Dotenv({
+      path: './.env.production',
+    }),
+  ],
+  optimization: {
+    minimizer: [
+      new CssMinimizerPlugin(),
+      new TerserPlugin({
+        parallel: true,
+      }),
+    ],
+    runtimeChunk: 'single',
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
+  },
+  performance: {
+    hints: 'warning',
+    maxEntrypointSize: 512000,
+    maxAssetSize: 512000,
+  },
+});
+```
+
+### src/components/ResponsiveImage/ResponsiveImage.js
+```javascript
+import { h } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
+
+const ResponsiveImage = ({ src, alt, sizes }) => {
+  const [imageMeta, setImageMeta] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(`/assets/images/metadata/${src.replace(/\.[^/.]+$/, "")}.json`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load image metadata');
+        }
+        return response.json();
+      })
+      .then(setImageMeta)
+      .catch(err => {
+        console.error('Error loading image metadata:', err);
+        setError('Failed to load image. Please try again later.');
+      });
+  }, [src]);
+
+  if (error) return <div class="error">{error}</div>;
+  if (!imageMeta) return <div class="loading">Loading...</div>;
+
+  const basePath = '/assets/images';
+  const webpSrcSet = [300, 600, 1200, 2000]
+    .map(size => `${basePath}/webp/${src.replace(/\.[^/.]+$/, "")}-${size}.webp ${size}w`)
+    .join(', ');
+  
+  const fallbackFormat = imageMeta.hasAlpha ? 'png' : 'jpg';
+  const fallbackSrcSet = [300, 600, 1200, 2000]
+    .map(size => `${basePath}/${fallbackFormat}/${src.replace(/\.[^/.]+$/, "")}-${size}.${fallbackFormat} ${size}w`)
+    .join(', ');
+
+  return (
+    <img
+      src={`${basePath}/${fallbackFormat}/${src.replace(/\.[^/.]+$/, "")}-600.${fallbackFormat}`}
+      srcSet={`${webpSrcSet}, ${fallbackSrcSet}`}
+      sizes={sizes}
+      alt={alt}
+      loading="lazy"
+      onError={() => setError('Failed to load image. Please try again later.')}
+    />
+  );
+};
+
+export default ResponsiveImage;
+```
+
+### src/components/App/App.js
+```javascript
+import { h, Component } from 'preact';
+import ResponsiveImage from '../ResponsiveImage/ResponsiveImage';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+
+const App = () => (
+  <div id="app">
+    <h1>Preact Responsive Image Demo</h1>
+    <ErrorBoundary>
+      <ResponsiveImage
+        src="example.png"
+        alt="Example responsive image"
+        sizes="(max-width: 600px) 300px, (max-width: 1200px) 600px, 1200px"
+      />
+    </ErrorBoundary>
+  </div>
+);
+
+export default App;
+```
+
+### src/index.js
+```javascript
+import { h, render } from 'preact';
+import App from './components/App/App';
+import './styles/global.css';
+
+render(<App />, document.body);
+```
+
+### src/index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Preact Responsive Image App</title>
+    <meta name="description" content="A Preact application demonstrating responsive image handling">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <!-- You can add any additional meta tags, stylesheets, or scripts here -->
+</head>
+<body>
+    <div id="app"></div>
+    <!-- The Preact app will be rendered inside this div -->
+    <!-- Webpack will automatically inject the bundled JavaScript here -->
+</body>
+</html>
+```
+
+### src/styles/global.css
+```css
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+```
+
+### .gitignore
+```
+node_modules/
+dist/
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.vercel
+```
+
+### vercel.json
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    {
+      "src": "/assets/images/(.*)",
+      "dest": "/assets/images/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
+```
+
+## Setup Instructions
+
+1. Clone the repository or create a new directory for your project.
+2. Copy all the files and directories as per the project structure.
+3. Run `npm install` to install all dependencies.
+4. Create a `.env.development` and `.env.production` file based on the `.env.example` file.
+5. Place your source PNG images in the `public/images/` directory.
+6. Run `npm start` to start the development server.
+7. Run `npm run build` to create a production build.
+
+## Additional Information
+
+### Responsive Image Handling
+The project uses the `responsive-loader` with a custom adapter using Sharp to generate multiple sizes and formats of each image. The `ResponsiveImage` component then uses these generated images to provide a responsive image with WebP support and appropriate fallbacks.
+
+### Webpack Configuration
+The Webpack configuration is split into three files:
+- `webpack.common.js`: Contains common configuration for both development and production.
+- `webpack.dev.js`: Development-specific configuration.
+- `webpack.prod.js`: Production-specific configuration with optimizations.
+
+### Environment Variables
+The project uses `dotenv-webpack` to handle environment variables. Make sure to set up your `.env.development` and `.env.production` files with the necessary variables.
+
+### Deployment
+The project includes a `vercel.json` file for easy deployment to Vercel. You can deploy by running `npm run deploy` after setting up the Vercel CLI.
+
+### Error Handling
+The project includes an `ErrorBoundary` component in `App.js` to catch and display errors gracefully.
+
+For more detailed information on building and troubleshooting, refer to the `build.md` file in the project root.
