@@ -2,7 +2,7 @@
 
 This project demonstrates a production-ready Preact application with advanced responsive image handling. It includes optimizations, best practices, and features suitable for a production environment.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/jameswquinn/preact-responsive-image-project)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/preact-responsive-image-project)
 
 ## Table of Contents
 
@@ -12,7 +12,8 @@ This project demonstrates a production-ready Preact application with advanced re
 - [Setup Instructions](#setup-instructions)
 - [Usage](#usage)
 - [How It Works](#how-it-works)
-- [Project Workflow](#project-workflow)
+- [Project Lifecycle](#project-lifecycle)
+- [Detailed Process Description](#detailed-process-description)
 - [Configuration Files](#configuration-files)
 - [Scripts](#scripts)
 - [Deployment](#deployment)
@@ -137,29 +138,34 @@ const MyComponent = () => (
    - The component includes error handling for both image and metadata loading failures.
    - An ErrorBoundary component in App.js catches any errors that occur during rendering.
 
-## Project Workflow
+## Project Lifecycle
 
-The following flowchart illustrates a simplified version of the Preact Responsive Image Project lifecycle:
+The following flowchart illustrates the lifecycle of the Preact Responsive Image Project:
 
 ```mermaid
 graph TD
-    A[Development] --> B[Local Testing]
-    B --> C[Push to GitHub]
-    C --> D[CI/CD Pipeline]
-    D --> E[Build Process]
-    E --> F[Image Processing]
-    F --> G[Deploy to Vercel]
-    G --> H[Production Release]
-    H --> I[Monitor & Feedback]
-    I --> A
+    A[Development] --> B[Configuration]
+    B --> C[Local Testing]
+    C --> D[Push to GitHub]
+    D --> E[CI/CD Pipeline]
+    E --> F[Build Process]
+    F --> G[Image Processing]
+    G --> H[Deploy to Vercel]
+    H --> I[Production Release]
+    I --> J[Monitor & Feedback]
+    J --> A
+
+    A -- Ongoing --> K[Error Handling]
+    I -- Ongoing --> K
+
+    I -- Runtime --> L[Runtime Behavior]
 ```
 
-This simplified diagram shows the main stages of the development and deployment process. The actual workflow includes more detailed steps, such as:
-- Linting and formatting checks
-- Generating different image formats (WebP, PNG, JPEG) based on alpha channel presence
-- Creating metadata JSON files for images
-- Running post-deployment tests
-- Performance monitoring and optimization
+This diagram shows the main stages of the development and deployment process, including configuration, testing, CI/CD, image processing, and ongoing activities like error handling and monitoring.
+
+## Detailed Process Description
+
+For a comprehensive breakdown of each step in the project lifecycle, please refer to the [PROCESS.md](PROCESS.md) file in the repository. This document provides in-depth information about each stage, from development to monitoring and feedback.
 
 ## Configuration Files
 
